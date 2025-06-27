@@ -16,6 +16,7 @@ class Renderer {
     };
     
     this.shadowRoot = null;
+    this.shadowRootCreated = false;
     this.baseUrl = '';
     this.resourceMap = new Map();
     this.isRendered = false;
@@ -82,19 +83,33 @@ class Renderer {
       return;
     }
 
-    // 检查容器是否已经有Shadow DOM
-    if (this.container.shadowRoot) {
-      this.shadowRoot = this.container.shadowRoot;
-      // 清空现有内容
-      this.shadowRoot.innerHTML = '';
-    } else {
-      this.shadowRoot = this.container.attachShadow({ 
-        mode: 'closed',
-        delegatesFocus: false 
-      });
+    if (this.shadowRootCreated) {
+      console.warn('[SmartIframe] Shadow root 已存在，跳过创建');
+      return;
     }
 
-    // 添加基础样式重置
+    if (this.container.shadowRoot) {
+      this.shadowRoot = this.container.shadowRoot;
+      this.shadowRootCreated = true;
+      this.shadowRoot.innerHTML = '';
+    } else {
+      try {
+        this.shadowRoot = this.container.attachShadow({ 
+          mode: 'open',
+          delegatesFocus: false 
+        });
+        this.shadowRootCreated = true;
+      } catch (error) {
+        if (error.name === 'NotSupportedError') {
+          console.warn('[SmartIframe] Shadow root 已存在，尝试重用现有容器');
+          this.shadowRootCreated = true;
+          this.shadowRoot = this.container;
+        } else {
+          throw error;
+        }
+      }
+    }
+
     const resetStyle = document.createElement('style');
     resetStyle.textContent = `
       :host {
@@ -112,7 +127,9 @@ class Renderer {
       }
     `;
     
-    this.shadowRoot.appendChild(resetStyle);
+    if (this.shadowRoot) {
+      this.shadowRoot.appendChild(resetStyle);
+    }
   }
 
   /**
@@ -310,7 +327,7 @@ class Renderer {
           get: (target, prop) => {
             // 只允许访问安全的属性
             const allowedProps = ['console', 'setTimeout', 'setInterval', 'clearTimeout', 'clearInterval'];
-            if (allowedProps.includes(prop)) {
+            if (typeof prop === 'string' && allowedProps.includes(prop)) {
               return sandbox[prop];
             }
             return undefined;
@@ -362,8 +379,11 @@ class Renderer {
   destroy() {
     if (this.shadowRoot) {
       this.shadowRoot.innerHTML = '';
+      // 重置shadowRoot引用，但不移除容器上的shadowRoot
+      this.shadowRoot = null;
     }
     
+    this.shadowRootCreated = false; // 重置创建标记
     this.resourceMap.clear();
     this.isRendered = false;
     
@@ -384,4 +404,4 @@ class Renderer {
   }
 }
 
-export default Renderer; 
+export default Renderer;

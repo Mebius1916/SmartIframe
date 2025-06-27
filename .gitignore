@@ -8,6 +8,7 @@ yarn.lock
 
 # 构建产物
 *.tgz
+dist/
 
 # 运行时数据
 pids

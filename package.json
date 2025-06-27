@@ -9,7 +9,7 @@
     "build": "rollup -c",
     "dev": "rollup -c -w",
     "test": "jest",
-    "serve": "python3 -m http.server 8080",
+    "serve": "python3 -m http.server 8089",
     "lint": "eslint src/**/*.js"
   },
   "keywords": [
