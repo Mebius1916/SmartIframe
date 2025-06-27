@@ -1,0 +1,36 @@
+{
+  "name": "smart-iframe-sdk",
+  "version": "1.0.0",
+  "description": "智能iframe替代方案，解决资源重复加载问题",
+  "main": "dist/smart-iframe.js",
+  "module": "dist/smart-iframe.esm.js",
+  "types": "types/index.d.ts",
+  "scripts": {
+    "build": "rollup -c",
+    "dev": "rollup -c -w",
+    "test": "jest",
+    "serve": "python3 -m http.server 8080",
+    "lint": "eslint src/**/*.js"
+  },
+  "keywords": [
+    "iframe",
+    "microfrontend",
+    "performance",
+    "cache",
+    "web-components"
+  ],
+  "author": "Smart-Iframe Team",
+  "license": "MIT",
+  "devDependencies": {
+    "rollup": "^2.79.1",
+    "@rollup/plugin-terser": "^0.4.4",
+    "@rollup/plugin-babel": "^6.0.4",
+    "@babel/core": "^7.23.0",
+    "@babel/preset-env": "^7.23.0"
+  },
+  "files": [
+    "dist/",
+    "types/",
+    "README.md"
+  ]
+} 
