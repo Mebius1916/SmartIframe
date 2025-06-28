@@ -115,7 +115,7 @@
   </div>
 
   <script type="module">
-    import SmartIframe, { create, load } from './src/index.js';
+    import SmartIframe, { load, ResourceCache } from './src/index.js';
     
     let instance1 = null;
     let instance2 = null;
@@ -198,7 +198,7 @@
     };
 
     function updateGlobalStats() {
-      const cacheStats = SmartIframe.getCacheStats();
+      const cacheStats = ResourceCache.getStats();
       document.getElementById('globalStats').innerHTML = `
         全局缓存统计:<br>
         缓存数量: ${cacheStats.count}<br>

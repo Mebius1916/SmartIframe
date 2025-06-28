@@ -11,24 +11,15 @@ class SmartIframeElement extends HTMLElement {
     this.isConnected = false;
   }
 
-  /**
-   * 定义观察的属性
-   */
   static get observedAttributes() {
     return ['src', 'width', 'height', 'sandbox', 'load-images', 'load-scripts', 'load-styles'];
   }
 
-  /**
-   * 元素连接到DOM时调用
-   */
   connectedCallback() {
     this.isConnected = true;
     this.render();
   }
 
-  /**
-   * 元素从DOM断开时调用
-   */
   disconnectedCallback() {
     this.isConnected = false;
     if (this.smartIframe) {
@@ -37,9 +28,6 @@ class SmartIframeElement extends HTMLElement {
     }
   }
 
-  /**
-   * 属性变化时调用
-   */
   attributeChangedCallback(name, oldValue, newValue) {
     if (!this.isConnected || oldValue === newValue) {
       return;
@@ -48,7 +36,7 @@ class SmartIframeElement extends HTMLElement {
     switch (name) {
       case 'src':
         if (this.smartIframe && newValue) {
-          this.smartIframe.src = newValue;
+          this.smartIframe.load(newValue);
         }
         break;
       case 'width':
@@ -62,21 +50,17 @@ class SmartIframeElement extends HTMLElement {
         }
         break;
       default:
-        // 其他属性变化时重新渲染
         this.render();
         break;
     }
   }
 
-  /**
-   * 渲染组件
-   */
   render() {
     if (this.smartIframe) {
       this.smartIframe.destroy();
     }
 
-    // 创建容器div
+    // 创建容器
     const container = document.createElement('div');
     container.style.width = '100%';
     container.style.height = '100%';
@@ -84,7 +68,7 @@ class SmartIframeElement extends HTMLElement {
     this.innerHTML = '';
     this.appendChild(container);
 
-    // 解析配置选项
+    // 解析配置
     const options = {
       width: this.getAttribute('width') || '100%',
       height: this.getAttribute('height') || '400px',
@@ -94,16 +78,13 @@ class SmartIframeElement extends HTMLElement {
       loadStyles: this.getAttribute('load-styles') !== 'false'
     };
 
-    // 创建SmartIframe实例
+    // 创建实例
     this.smartIframe = new SmartIframe(container, options);
     
-    // 绑定到容器元素
-    container.smartIframe = this.smartIframe;
-
-    // 设置事件监听
+    // 设置事件转发
     this.setupEventListeners();
 
-    // 如果有src属性，立即加载
+    // 自动加载
     const src = this.getAttribute('src');
     if (src) {
       this.smartIframe.load(src).catch(error => {
@@ -112,14 +93,10 @@ class SmartIframeElement extends HTMLElement {
     }
   }
 
-  /**
-   * 设置事件监听器
-   */
   setupEventListeners() {
     const container = this.querySelector('div');
     if (!container) return;
 
-    // 转发SmartIframe的事件
     container.addEventListener('load', (e) => {
       this.dispatchEvent(new CustomEvent('load', {
         detail: e.detail,
@@ -135,16 +112,8 @@ class SmartIframeElement extends HTMLElement {
     });
   }
 
-  /**
-   * src属性的getter
-   */
-  get src() {
-    return this.getAttribute('src') || '';
-  }
-
-  /**
-   * src属性的setter
-   */
+  // 属性访问器
+  get src() { return this.getAttribute('src') || ''; }
   set src(value) {
     if (value) {
       this.setAttribute('src', value);
@@ -153,16 +122,7 @@ class SmartIframeElement extends HTMLElement {
     }
   }
 
-  /**
-   * width属性的getter
-   */
-  get width() {
-    return this.getAttribute('width') || '100%';
-  }
-
-  /**
-   * width属性的setter
-   */
+  get width() { return this.getAttribute('width') || '100%'; }
   set width(value) {
     if (value) {
       this.setAttribute('width', value);
@@ -171,16 +131,7 @@ class SmartIframeElement extends HTMLElement {
     }
   }
 
-  /**
-   * height属性的getter
-   */
-  get height() {
-    return this.getAttribute('height') || '400px';
-  }
-
-  /**
-   * height属性的setter
-   */
+  get height() { return this.getAttribute('height') || '400px'; }
   set height(value) {
     if (value) {
       this.setAttribute('height', value);
@@ -189,40 +140,23 @@ class SmartIframeElement extends HTMLElement {
     }
   }
 
-  /**
-   * 获取加载状态
-   */
   get loading() {
     return this.smartIframe ? this.smartIframe.loading : false;
   }
 
-  /**
-   * 获取加载完成状态
-   */
   get loaded() {
     return this.smartIframe ? this.smartIframe.loaded : false;
   }
 
-  /**
-   * 重新加载
-   */
   async reload() {
     if (this.smartIframe) {
       await this.smartIframe.reload();
     }
   }
 
-  /**
-   * 获取统计信息
-   */
   getStats() {
     return this.smartIframe ? this.smartIframe.getStats() : null;
   }
-}
-
-// 注册自定义元素
-if (!customElements.get('smart-iframe')) {
-  customElements.define('smart-iframe', SmartIframeElement);
 }
 
 export default SmartIframeElement; 

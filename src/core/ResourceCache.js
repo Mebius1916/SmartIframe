@@ -1,66 +1,67 @@
 /**
- * 资源缓存层 - 解决重复请求问题的核心模块
+ * 资源缓存层 - 解决重复请求问题
  */
 class ResourceCache {
-  static cache = new Map();
-  static pendingRequests = new Map();
-  static maxCacheSize = 100; // 最大缓存数量
-  static maxAge = 30 * 60 * 1000; // 30分钟过期时间
+  constructor() {
+    this.cache = new Map();
+    this.pendingRequests = new Map();
+    this.maxCacheSize = 100;
+    this.maxAge = 30 * 60 * 1000; // 30分钟
+    this.stats = {
+      hits: 0,
+      misses: 0,
+      errors: 0,
+      totalRequests: 0
+    };
+  }
 
   /**
    * 带缓存的资源获取
-   * @param {string} url - 资源URL
-   * @param {Object} options - 请求选项
-   * @returns {Promise<Object>} 缓存的资源对象
    */
-  static async fetchWithCache(url, options = {}) {
+  async fetchWithCache(url, options = {}) {
     const normalizedUrl = this.normalizeUrl(url);
+    this.stats.totalRequests++;
     
     // 检查缓存
     if (this.cache.has(normalizedUrl)) {
       const cached = this.cache.get(normalizedUrl);
       
-      // 检查是否过期
       if (Date.now() - cached.timestamp < this.maxAge) {
-        console.log(`[SmartIframe] 使用缓存: ${normalizedUrl}`);
-        return cached;
+        this.stats.hits++;
+        this.updateCacheAccess(normalizedUrl);
+        return { ...cached };
       } else {
-        // 删除过期缓存
         this.cache.delete(normalizedUrl);
       }
     }
 
-    // 检查是否有正在进行的请求
+    this.stats.misses++;
+
+    // 检查正在进行的请求
     if (this.pendingRequests.has(normalizedUrl)) {
-      console.log(`[SmartIframe] 等待正在进行的请求: ${normalizedUrl}`);
       return await this.pendingRequests.get(normalizedUrl);
     }
 
     // 发起新请求
-    console.log(`[SmartIframe] 发起新请求: ${normalizedUrl}`);
     const requestPromise = this.performRequest(normalizedUrl, options);
     this.pendingRequests.set(normalizedUrl, requestPromise);
 
     try {
       const result = await requestPromise;
       this.pendingRequests.delete(normalizedUrl);
-      
-      // 存入缓存
       this.addToCache(normalizedUrl, result);
-      return result;
+      return { ...result };
     } catch (error) {
+      this.stats.errors++;
       this.pendingRequests.delete(normalizedUrl);
       throw error;
     }
   }
 
   /**
-   * 执行实际的HTTP请求
-   * @param {string} url - 请求URL
-   * @param {Object} options - 请求选项
-   * @returns {Promise<Object>} 请求结果
+   * 执行HTTP请求
    */
-  static async performRequest(url, options) {
+  async performRequest(url, options) {
     try {
       const response = await fetch(url, {
         mode: 'cors',
@@ -74,13 +75,15 @@ class ResourceCache {
 
       const contentType = response.headers.get('content-type') || '';
       let content;
+      let size = 0;
 
-      if (contentType.includes('text/') || contentType.includes('application/javascript') || contentType.includes('application/json')) {
+      if (this.isTextContent(contentType)) {
         content = await response.text();
+        size = content.length;
       } else {
-        // 对于二进制资源，转换为blob URL
         const blob = await response.blob();
         content = URL.createObjectURL(blob);
+        size = blob.size;
       }
 
       return {
@@ -88,100 +91,135 @@ class ResourceCache {
         contentType,
         url,
         timestamp: Date.now(),
-        size: content.length || 0
+        size,
+        lastAccess: Date.now()
       };
     } catch (error) {
-      console.error(`[SmartIframe] 请求失败: ${url}`, error);
       throw error;
     }
   }
 
   /**
-   * URL标准化处理
-   * @param {string} url - 原始URL
-   * @returns {string} 标准化后的URL
+   * 判断文本内容
    */
-  static normalizeUrl(url) {
+  isTextContent(contentType) {
+    const textTypes = ['text/', 'application/javascript', 'application/json', 'application/xml'];
+    return textTypes.some(type => contentType.includes(type));
+  }
+
+  /**
+   * URL标准化
+   */
+  normalizeUrl(url) {
     try {
       const urlObj = new URL(url, window.location.href);
-      // 移除fragment，保留query参数
       urlObj.hash = '';
       return urlObj.toString();
     } catch (error) {
-      console.warn(`[SmartIframe] URL标准化失败: ${url}`, error);
       return url;
     }
   }
 
   /**
    * 添加到缓存
-   * @param {string} url - URL
-   * @param {Object} data - 缓存数据
    */
-  static addToCache(url, data) {
-    // 检查缓存大小限制
+  addToCache(url, data) {
     if (this.cache.size >= this.maxCacheSize) {
-      // 删除最旧的缓存项
-      const oldestKey = this.cache.keys().next().value;
-      this.cache.delete(oldestKey);
-      console.log(`[SmartIframe] 删除最旧缓存: ${oldestKey}`);
+      this.evictOldestCache();
     }
 
-    this.cache.set(url, data);
-    console.log(`[SmartIframe] 缓存已保存: ${url} (${data.size} bytes)`);
+    this.cache.set(url, {
+      ...data,
+      lastAccess: Date.now()
+    });
+  }
+
+  /**
+   * 驱逐最旧缓存
+   */
+  evictOldestCache() {
+    if (this.cache.size === 0) return;
+
+    let oldestKey = '';
+    let oldestTime = Date.now();
+
+    for (const [key, value] of this.cache.entries()) {
+      if (value.lastAccess < oldestTime) {
+        oldestTime = value.lastAccess;
+        oldestKey = key;
+      }
+    }
+
+    if (oldestKey) {
+      this.cache.delete(oldestKey);
+    }
+  }
+
+  /**
+   * 更新访问时间
+   */
+  updateCacheAccess(url) {
+    const cached = this.cache.get(url);
+    if (cached) {
+      cached.lastAccess = Date.now();
+    }
   }
 
   /**
    * 清除缓存
-   * @param {string} url - 可选的特定URL，不传则清除全部
    */
-  static clearCache(url = null) {
-    if (url) {
-      const normalizedUrl = this.normalizeUrl(url);
-      this.cache.delete(normalizedUrl);
-      console.log(`[SmartIframe] 已清除缓存: ${normalizedUrl}`);
-    } else {
-      this.cache.clear();
-      console.log('[SmartIframe] 已清除全部缓存');
-    }
+  clear() {
+    this.cache.clear();
+    this.pendingRequests.clear();
   }
 
   /**
-   * 获取缓存统计信息
-   * @returns {Object} 缓存统计
+   * 获取统计
    */
-  static getCacheStats() {
-    const totalSize = Array.from(this.cache.values())
-      .reduce((sum, item) => sum + (item.size || 0), 0);
-    
+  getStats() {
+    // 计算总大小
+    let totalSize = 0;
+    for (const [url, cached] of this.cache.entries()) {
+      if (cached.size) {
+        totalSize += cached.size;
+      }
+    }
+
     return {
-      count: this.cache.size,
-      totalSize,
-      maxSize: this.maxCacheSize,
-      pendingRequests: this.pendingRequests.size
+      ...this.stats,
+      count: this.cache.size,          // 缓存数量
+      cacheSize: this.cache.size,      // 保持向后兼容
+      totalSize,                       // 总大小
+      pendingRequests: this.pendingRequests.size,
+      hitRate: this.stats.totalRequests > 0 ? (this.stats.hits / this.stats.totalRequests * 100).toFixed(2) : '0.00'
     };
   }
 
   /**
-   * 预加载资源列表
-   * @param {Array<string>} urls - 要预加载的URL列表
-   * @returns {Promise<Array>} 预加载结果
+   * 预加载资源
    */
-  static async preloadResources(urls) {
-    console.log(`[SmartIframe] 开始预加载 ${urls.length} 个资源`);
-    const promises = urls.map(url => 
-      this.fetchWithCache(url).catch(error => {
-        console.warn(`[SmartIframe] 预加载失败: ${url}`, error);
+  async preloadResources(urls) {
+    const promises = urls.map(url => {
+      return this.fetchWithCache(url).catch(error => {
+        console.warn(`[ResourceCache] 预加载失败: ${url}`, error);
         return null;
-      })
-    );
+      });
+    });
+
+    const results = await Promise.allSettled(promises);
+    const successful = results.filter(result => result.status === 'fulfilled' && result.value).length;
     
-    const results = await Promise.all(promises);
-    const successCount = results.filter(r => r !== null).length;
-    console.log(`[SmartIframe] 预加载完成: ${successCount}/${urls.length} 成功`);
-    
-    return results;
+    return { total: urls.length, successful };
+  }
+
+  /**
+   * 配置缓存
+   */
+  setConfig(config) {
+    if (config.maxCacheSize) this.maxCacheSize = config.maxCacheSize;
+    if (config.maxAge) this.maxAge = config.maxAge;
   }
 }
 
-export default ResourceCache; 
+// 导出单例
+export default new ResourceCache(); 

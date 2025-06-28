@@ -2,9 +2,9 @@
   "name": "smart-iframe-sdk",
   "version": "1.0.0",
   "description": "智能iframe替代方案，解决资源重复加载问题",
+  "type": "module",
   "main": "dist/smart-iframe.js",
   "module": "dist/smart-iframe.esm.js",
-  "types": "types/index.d.ts",
   "scripts": {
     "build": "rollup -c",
     "dev": "rollup -c -w",
@@ -30,7 +30,6 @@
   },
   "files": [
     "dist/",
-    "types/",
     "README.md"
   ]
 } 
