@@ -1,4 +1,4 @@
-import ResourceCache from '../core/ResourceCache.js';
+import ResourceCache from '../components/ResourceCache.js';
 
 /**
  * 处理CSS内容

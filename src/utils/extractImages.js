@@ -1,15 +1,11 @@
-import { resolveUrl } from './resolveUrl.js';
 import { extractUrlsFromCSS } from './extractUrlsFromCSS.js';
 
-/**
- * 提取图片资源
- */
 export function extractImages(doc, resources, baseUrl) {
   const images = doc.querySelectorAll('img[src], img[data-src]');
   images.forEach(img => {
     const src = img.getAttribute('src') || img.getAttribute('data-src');
     if (src) {
-      const absoluteUrl = resolveUrl(src, baseUrl);
+      const absoluteUrl = new URL(src, baseUrl).toString();
       resources.images.push({
         element: img,
         originalUrl: src,
@@ -19,7 +15,6 @@ export function extractImages(doc, resources, baseUrl) {
     }
   });
 
-  // 背景图片
   const elementsWithBg = doc.querySelectorAll('[style*="background"]');
   elementsWithBg.forEach(el => {
     const style = el.getAttribute('style');

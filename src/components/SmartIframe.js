@@ -1,21 +1,16 @@
 import ResourceCache from './ResourceCache.js';
 import { renderHTML, processStyles } from '../renderers/index.js';
 import { parseHTML, isUrlAllowed } from '../utils/index.js';
-import { getDefaultConfig, mergeConfig } from '../config/index.js';
-import { resolveContainer, setupContainer } from '../container/index.js';
+import { getDefaultConfig } from '../config/index.js';
+import { setupContainer } from '../container/index.js';
 import StateManager from '../ui/StateManager.js';
-
-/**
- * SmartIframe - 智能iframe替代方案
- * 简化版本，集成所有核心功能
- */
 class SmartIframe {
   constructor(container, options = {}) {
-    // 解析容器
-    this.container = resolveContainer(container);
+    // 直接使用容器，框架内部调用可以确保类型正确
+    this.container = container;
     
-    // 配置管理
-    this.config = mergeConfig(options);
+    // 简单配置合并，框架内部调用无需过度验证
+    this.config = { ...getDefaultConfig(), ...options };
     
     // 状态管理
     this.src = '';
@@ -83,27 +78,22 @@ class SmartIframe {
    */
   async performLoad(url) {
     // 1. 获取HTML
-    this.stateManager.showLoading('正在获取页面内容...');
     const htmlResource = await ResourceCache.fetchWithCache(url);
     
     // 2. 解析HTML
-    this.stateManager.showLoading('正在分析页面结构...');
     const parsed = parseHTML(htmlResource.content, url);
     
     // 3. 预加载资源
     if (parsed.allUrls.length > 0) {
-      this.stateManager.showLoading(`正在预加载 ${parsed.allUrls.length} 个资源...`);
       const limitedUrls = parsed.allUrls.slice(0, this.config.preloadLimit);
       await ResourceCache.preloadResources(limitedUrls);
     }
 
     // 4. 渲染HTML
-    this.stateManager.showLoading('正在渲染页面结构...');
     const shadowRoot = await renderHTML(this.container, parsed.document, this.config);
 
     // 5. 处理样式
     if (parsed.resources.stylesheets.length > 0) {
-      this.stateManager.showLoading(`正在加载 ${parsed.resources.stylesheets.length} 个样式文件...`);
       await processStyles(parsed.resources.stylesheets, shadowRoot, this.config);
     }
 

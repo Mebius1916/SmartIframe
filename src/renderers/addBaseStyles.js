@@ -1,6 +1,3 @@
-/**
- * 添加基础样式
- */
 export function addBaseStyles(shadowRoot) {
   const resetStyle = document.createElement('style');
   resetStyle.textContent = `

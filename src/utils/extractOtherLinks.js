@@ -1,14 +1,9 @@
-import { resolveUrl } from './resolveUrl.js';
-
-/**
- * 提取其他链接资源
- */
 export function extractOtherLinks(doc, resources, baseUrl) {
   const links = doc.querySelectorAll('link:not([rel="stylesheet"]):not([rel="preload"][as="style"])');
   links.forEach(link => {
     const href = link.getAttribute('href');
     if (href) {
-      const absoluteUrl = resolveUrl(href, baseUrl);
+      const absoluteUrl = new URL(href, baseUrl).toString();
       resources.links.push({
         element: link,
         originalUrl: href,

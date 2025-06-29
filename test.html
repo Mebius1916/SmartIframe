@@ -100,13 +100,17 @@
     <div class="performance-comparison">
       <div>
         <h3>实例1 - 首次加载</h3>
-        <div class="iframe-container" id="iframe1"></div>
+        <div class="iframe-container" id="iframe1">
+          <smart-iframe id="smart1" style="width:100%;height:400px" load-scripts="false"></smart-iframe>
+        </div>
         <div class="stats" id="stats1">等待测试...</div>
       </div>
       
       <div>
         <h3>实例2 - 缓存加载</h3>
-        <div class="iframe-container" id="iframe2"></div>
+        <div class="iframe-container" id="iframe2">
+          <smart-iframe id="smart2" style="width:100%;height:400px" load-scripts="false"></smart-iframe>
+        </div>
         <div class="stats" id="stats2">等待测试...</div>
       </div>
     </div>
@@ -115,10 +119,9 @@
   </div>
 
   <script type="module">
-    import SmartIframe, { load, ResourceCache } from './src/index.js';
+    import { ResourceCache } from './src/index.js';
     
-    let instance1 = null;
-    let instance2 = null;
+    let start1 = 0, end1 = 0, start2 = 0, end2 = 0;
     
     window.runTest = async function() {
       const url = document.getElementById('testUrl').value.trim();
@@ -130,70 +133,57 @@
       // 清除现有实例
       clearTest();
 
-      try {
-        // 测试实例1
-        document.getElementById('stats1').textContent = '正在加载...';
-        const start1 = performance.now();
-        
-        instance1 = await load('#iframe1', url, {
-          width: '100%',
-          height: '400px',
-          loadScripts: false
-        });
-        
-        const end1 = performance.now();
+      // 实例1
+      document.getElementById('stats1').textContent = '正在加载...';
+      const smart1 = document.getElementById('smart1');
+      start1 = performance.now();
+      smart1.removeAttribute('src'); // 先清空
+      // 监听加载完成
+      const onLoad1 = () => {
+        end1 = performance.now();
         document.getElementById('stats1').innerHTML = `
           ✅ 加载完成<br>
           耗时: ${(end1 - start1).toFixed(2)}ms<br>
           状态: 发起网络请求
         `;
-
-        // 等待一秒后测试实例2
-        setTimeout(async () => {
-          try {
-            document.getElementById('stats2').textContent = '正在加载...';
-            const start2 = performance.now();
-            
-            instance2 = await load('#iframe2', url, {
-              width: '100%',
-              height: '400px',
-              loadScripts: false
-            });
-            
-            const end2 = performance.now();
-            document.getElementById('stats2').innerHTML = `
-              ✅ 加载完成<br>
-              耗时: ${(end2 - start2).toFixed(2)}ms<br>
-              状态: 使用缓存<br>
-              <strong>性能提升: ${((end1 - start1) / (end2 - start2)).toFixed(1)}x</strong>
-            `;
-            
-            updateGlobalStats();
-          } catch (error) {
-            document.getElementById('stats2').innerHTML = `❌ 加载失败: ${error.message}`;
-          }
-        }, 1000);
-
-      } catch (error) {
-        document.getElementById('stats1').innerHTML = `❌ 加载失败: ${error.message}`;
-      }
+        smart1.removeEventListener('load', onLoad1);
+        // 1秒后加载实例2
+        setTimeout(runTest2, 1000);
+      };
+      smart1.addEventListener('load', onLoad1);
+      smart1.setAttribute('src', url);
     };
 
+    function runTest2() {
+      const url = document.getElementById('testUrl').value.trim();
+      const smart2 = document.getElementById('smart2');
+      document.getElementById('stats2').textContent = '正在加载...';
+      start2 = performance.now();
+      smart2.removeAttribute('src'); // 先清空
+      // 监听加载完成
+      const onLoad2 = () => {
+        end2 = performance.now();
+        document.getElementById('stats2').innerHTML = `
+          ✅ 加载完成<br>
+          耗时: ${(end2 - start2).toFixed(2)}ms<br>
+          状态: 使用缓存<br>
+          <strong>性能提升: ${((end1 - start1) / (end2 - start2)).toFixed(1)}x</strong>
+        `;
+        smart2.removeEventListener('load', onLoad2);
+        updateGlobalStats();
+      };
+      smart2.addEventListener('load', onLoad2);
+      smart2.setAttribute('src', url);
+    }
+
     window.clearTest = function() {
-      if (instance1) {
-        instance1.destroy();
-        instance1 = null;
-      }
-      if (instance2) {
-        instance2.destroy();
-        instance2 = null;
-      }
-      
-      document.getElementById('iframe1').innerHTML = '';
-      document.getElementById('iframe2').innerHTML = '';
+      // 重置 smart-iframe
+      const smart1 = document.getElementById('smart1');
+      const smart2 = document.getElementById('smart2');
+      smart1.removeAttribute('src');
+      smart2.removeAttribute('src');
       document.getElementById('stats1').textContent = '等待测试...';
       document.getElementById('stats2').textContent = '等待测试...';
-      
       updateGlobalStats();
     };
 

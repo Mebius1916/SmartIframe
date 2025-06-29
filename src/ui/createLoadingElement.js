@@ -1,6 +1,3 @@
-/**
- * 创建加载元素
- */
 export function createLoadingElement(message) {
   const div = document.createElement('div');
   div.className = 'smart-iframe-loading';

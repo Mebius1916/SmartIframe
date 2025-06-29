@@ -1,9 +1,4 @@
-import SmartIframe from '../core/SmartIframe.js';
-
-/**
- * SmartIframe Web Component
- * 使用方式：<smart-iframe src="https://example.com" width="800" height="600"></smart-iframe>
- */
+import SmartIframe from './SmartIframe.js';
 class SmartIframeElement extends HTMLElement {
   constructor() {
     super();
@@ -15,11 +10,13 @@ class SmartIframeElement extends HTMLElement {
     return ['src', 'width', 'height', 'sandbox', 'load-images', 'load-scripts', 'load-styles'];
   }
 
+  // 当 custom element首次被插入文档DOM时，被调用。
   connectedCallback() {
     this.isConnected = true;
     this.render();
   }
 
+  // 当 custom element从文档DOM中删除时，被调用
   disconnectedCallback() {
     this.isConnected = false;
     if (this.smartIframe) {
@@ -28,6 +25,7 @@ class SmartIframeElement extends HTMLElement {
     }
   }
 
+  // 当 custom element增加、删除、修改自身属性时，被调用。
   attributeChangedCallback(name, oldValue, newValue) {
     if (!this.isConnected || oldValue === newValue) {
       return;
@@ -80,9 +78,6 @@ class SmartIframeElement extends HTMLElement {
 
     // 创建实例
     this.smartIframe = new SmartIframe(container, options);
-    
-    // 设置事件转发
-    this.setupEventListeners();
 
     // 自动加载
     const src = this.getAttribute('src');
@@ -91,25 +86,6 @@ class SmartIframeElement extends HTMLElement {
         console.error('[SmartIframeElement] 加载失败:', error);
       });
     }
-  }
-
-  setupEventListeners() {
-    const container = this.querySelector('div');
-    if (!container) return;
-
-    container.addEventListener('load', (e) => {
-      this.dispatchEvent(new CustomEvent('load', {
-        detail: e.detail,
-        bubbles: true
-      }));
-    });
-
-    container.addEventListener('error', (e) => {
-      this.dispatchEvent(new CustomEvent('error', {
-        detail: e.detail,
-        bubbles: true
-      }));
-    });
   }
 
   // 属性访问器

@@ -1,6 +1,3 @@
-/**
- * 创建错误元素
- */
 export function createErrorElement(error, url, showErrorDetails = false) {
   const div = document.createElement('div');
   div.className = 'smart-iframe-error';

@@ -1,8 +1,3 @@
-import { resolveUrl } from './resolveUrl.js';
-
-/**
- * 从CSS中提取URL
- */
 export function extractUrlsFromCSS(cssContent, baseUrl) {
   const urls = [];
   const urlMatches = cssContent.match(/url\s*\(\s*["']?([^"')]+)["']?\s*\)/gi);
@@ -12,7 +7,7 @@ export function extractUrlsFromCSS(cssContent, baseUrl) {
       const urlMatch = match.match(/url\s*\(\s*["']?([^"')]+)["']?\s*\)/i);
       if (urlMatch && urlMatch[1]) {
         const originalUrl = urlMatch[1];
-        const absoluteUrl = resolveUrl(originalUrl, baseUrl);
+        const absoluteUrl = new URL(originalUrl, baseUrl).toString();
         urls.push({ originalUrl, absoluteUrl });
       }
     });

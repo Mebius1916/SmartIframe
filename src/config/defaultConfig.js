@@ -1,6 +1,3 @@
-/**
- * 获取默认配置
- */
 export function getDefaultConfig() {
   return {
     width: '100%',

@@ -1,9 +1,6 @@
 import { createShadowRoot } from './createShadowRoot.js';
 import { addBaseStyles } from './addBaseStyles.js';
 
-/**
- * 渲染HTML到Shadow DOM
- */
 export async function renderHTML(container, document, config) {
   const shadowRoot = createShadowRoot(container);
   

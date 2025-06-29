@@ -1,6 +1,3 @@
-/**
- * 创建Shadow DOM
- */
 export function createShadowRoot(container) {
   if (container.shadowRoot) {
     return container.shadowRoot;

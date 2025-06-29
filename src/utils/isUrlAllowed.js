@@ -1,6 +1,3 @@
-/**
- * URL允许检查
- */
 export function isUrlAllowed(url, config) {
   try {
     const urlObj = new URL(url);

@@ -1,6 +1,3 @@
-/**
- * 设置容器
- */
 export function setupContainer(container, config) {
   const htmlElement = container;
   // 确保是HTMLElement才有style属性
