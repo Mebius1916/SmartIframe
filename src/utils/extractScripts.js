@@ -1,6 +1,7 @@
 export function extractScripts(doc, resources, baseUrl) {
-  const scripts = doc.querySelectorAll('script[src]');
-  scripts.forEach(script => {
+  // 提取外部脚本
+  const externalScripts = doc.querySelectorAll('script[src]');
+  externalScripts.forEach(script => {
     const src = script.getAttribute('src');
     if (src) {
       const absoluteUrl = new URL(src, baseUrl).toString();
@@ -8,7 +9,22 @@ export function extractScripts(doc, resources, baseUrl) {
         element: script,
         originalUrl: src,
         absoluteUrl,
-        type: 'script'
+        type: 'script',
+        isExternal: true
+      });
+    }
+  });
+
+  // 提取内联脚本
+  const inlineScripts = doc.querySelectorAll('script:not([src])');
+  inlineScripts.forEach((script, index) => {
+    if (script.textContent.trim()) {
+      resources.scripts.push({
+        element: script,
+        content: script.textContent,
+        type: 'inline-script',
+        isExternal: false,
+        index: index
       });
     }
   });

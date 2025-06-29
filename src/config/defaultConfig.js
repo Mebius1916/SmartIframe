@@ -4,7 +4,7 @@ export function getDefaultConfig() {
     height: '400px',
     sandbox: true,
     loadImages: true,
-    loadScripts: false,
+    loadScripts: true,
     loadStyles: true,
     cache: true,
     maxCacheSize: 100,

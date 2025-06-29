@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartIframe 脚本执行演示</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f7fa;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .demo-section {
+            padding: 30px;
+        }
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin: 30px 0;
+        }
+        .demo-item {
+            border: 1px solid #e1e5e9;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .demo-header {
+            background: #f8f9fa;
+            padding: 15px;
+            font-weight: 600;
+            border-bottom: 1px solid #e1e5e9;
+        }
+        .demo-content {
+            height: 400px;
+            position: relative;
+        }
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+        .btn:hover {
+            background: #0056b3;
+        }
+        .btn.secondary {
+            background: #6c757d;
+        }
+        .url-input {
+            flex: 1;
+            min-width: 300px;
+            padding: 10px;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        smart-iframe {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+        .info {
+            background: #e3f2fd;
+            border: 1px solid #bbdefb;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .feature-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        .feature-item {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #007bff;
+        }
+        .feature-item h4 {
+            margin: 0 0 10px 0;
+            color: #007bff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 SmartIframe 脚本执行演示</h1>
+            <p>完全支持JavaScript执行，与原网页无差别的体验</p>
+        </div>
+
+        <div class="demo-section">
+            <div class="info">
+                <strong>✨ 新功能：</strong> SmartIframe现在完全支持JavaScript执行！您可以看到与原iframe完全一致的交互效果。
+            </div>
+
+            <div class="controls">
+                <input type="text" class="url-input" id="demoUrl" 
+                       placeholder="输入测试URL (例如: ./script-test.html)" 
+                       value="./script-test.html">
+                <button class="btn" onclick="loadDemo()">加载测试</button>
+                <button class="btn secondary" onclick="clearDemo()">清除</button>
+            </div>
+
+            <div class="comparison">
+                <div class="demo-item">
+                    <div class="demo-header">📱 SmartIframe (支持脚本)</div>
+                    <div class="demo-content">
+                        <smart-iframe id="smartDemo" load-scripts="true"></smart-iframe>
+                    </div>
+                </div>
+                
+                <div class="demo-item">
+                    <div class="demo-header">🔄 普通iframe (对比)</div>
+                    <div class="demo-content">
+                        <iframe id="normalDemo"></iframe>
+                    </div>
+                </div>
+            </div>
+
+            <div class="feature-list">
+                <div class="feature-item">
+                    <h4>🎯 完全兼容</h4>
+                    <p>JavaScript代码正常执行，事件处理完美支持，DOM操作无差异</p>
+                </div>
+                <div class="feature-item">
+                    <h4>🔒 安全隔离</h4>
+                    <p>Shadow DOM隔离机制，防止样式冲突和DOM污染</p>
+                </div>
+                <div class="feature-item">
+                    <h4>⚡ 性能优化</h4>
+                    <p>智能缓存系统，资源共享，多实例加载性能显著提升</p>
+                </div>
+                <div class="feature-item">
+                    <h4>🎛️ 灵活配置</h4>
+                    <p>可选择性启用/禁用脚本，满足不同安全要求</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="./src/index.js"></script>
+    <script>
+        function loadDemo() {
+            const url = document.getElementById('demoUrl').value.trim();
+            if (!url) {
+                alert('请输入测试URL');
+                return;
+            }
+
+            // 加载SmartIframe
+            const smartIframe = document.getElementById('smartDemo');
+            smartIframe.setAttribute('src', url);
+
+            // 加载普通iframe
+            const normalIframe = document.getElementById('normalDemo');
+            normalIframe.src = url;
+        }
+
+        function clearDemo() {
+            const smartIframe = document.getElementById('smartDemo');
+            smartIframe.removeAttribute('src');
+
+            const normalIframe = document.getElementById('normalDemo');
+            normalIframe.src = 'about:blank';
+        }
+
+        // 自动加载示例
+        setTimeout(() => {
+            loadDemo();
+        }, 1000);
+    </script>
+</body>
+</html> 

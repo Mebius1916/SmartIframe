@@ -1,5 +1,5 @@
 import ResourceCache from './ResourceCache.js';
-import { renderHTML, processStyles } from '../renderers/index.js';
+import { renderHTML, processStyles, processScripts } from '../renderers/index.js';
 import { parseHTML, isUrlAllowed } from '../utils/index.js';
 import { getDefaultConfig } from '../config/index.js';
 import { setupContainer } from '../container/index.js';
@@ -96,6 +96,11 @@ class SmartIframe {
     // 5. 处理样式
     if (parsed.resources.stylesheets.length > 0) {
       await processStyles(parsed.resources.stylesheets, shadowRoot, this.config);
+    }
+
+    // 6. 处理脚本
+    if (parsed.resources.scripts.length > 0) {
+      await processScripts(parsed.resources.scripts, shadowRoot, this.config);
     }
 
     return { url, parsed };
