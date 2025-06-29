@@ -1,4 +1,3 @@
-import { createShadowRoot } from './createShadowRoot.js';
 import { addBaseStyles } from './addBaseStyles.js';
 
 export async function renderHTML(container, document, config) {
@@ -15,6 +14,22 @@ export async function renderHTML(container, document, config) {
   shadowRoot.appendChild(body);
   
   return shadowRoot;
+}
+
+const createShadowRoot = (container) => {
+  if (container.shadowRoot) {
+    return container.shadowRoot;
+  }
+
+  try {
+    return container.attachShadow({ mode: 'open', delegatesFocus: false });
+  } catch (error) {
+    if (error.name === 'NotSupportedError') {
+      console.warn('[Renderer] Shadow root 已存在，使用容器自身');
+      return container;
+    }
+    throw error;
+  }
 }
 
 export default renderHTML; 

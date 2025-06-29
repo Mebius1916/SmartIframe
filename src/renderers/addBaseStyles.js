@@ -1,7 +1,7 @@
 export function addBaseStyles(shadowRoot) {
   const resetStyle = document.createElement('style');
   resetStyle.textContent = `
-    :host {
+    :where(:host) {
       display: block;
       width: 100%;
       height: 100%;
@@ -9,7 +9,7 @@ export function addBaseStyles(shadowRoot) {
       box-sizing: border-box;
     }
     
-    html, body {
+    :where(html, body) {
       margin: 0;
       padding: 0;
       width: 100%;
@@ -17,30 +17,30 @@ export function addBaseStyles(shadowRoot) {
       box-sizing: border-box;
     }
     
-    * {
+    :where(*) {
       box-sizing: border-box;
     }
     
-    img, video, iframe, object, embed {
+    :where(img, video, iframe, object, embed) {
       max-width: 100%;
       height: auto;
     }
     
-    ::-webkit-scrollbar {
+    :where(::-webkit-scrollbar) {
       width: 8px;
       height: 8px;
     }
     
-    ::-webkit-scrollbar-track {
+    :where(::-webkit-scrollbar-track) {
       background: #f1f1f1;
     }
     
-    ::-webkit-scrollbar-thumb {
+    :where(::-webkit-scrollbar-thumb) {
       background: #c1c1c1;
       border-radius: 4px;
     }
     
-    ::-webkit-scrollbar-thumb:hover {
+    :where(::-webkit-scrollbar-thumb:hover) {
       background: #a8a8a8;
     }
   `;

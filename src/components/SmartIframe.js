@@ -50,6 +50,7 @@ class SmartIframe {
 
       const result = await Promise.race([
         this.performLoad(url),
+        // 超时控制
         new Promise(resolve => setTimeout(() => resolve('timeout'), this.config.renderTimeout))
       ]);
 
